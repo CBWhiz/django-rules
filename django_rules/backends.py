@@ -28,9 +28,6 @@ class ObjectPermissionBackend(object):
         If it exists returns the value of obj.field_name or obj.field_name() in case
         the field is a method.
         """
-        
-        if obj is None:
-            return False
 
         if not user_obj.is_authenticated():
             user_obj = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
@@ -72,11 +69,16 @@ class ObjectPermissionBackend(object):
             rule = RulePermission.objects.get(codename = perm, content_type = ctype)
         except RulePermission.DoesNotExist:
             return False
-
+       	    
+       	if obj is None:
+            rule.field_name = rule.field_name + '_any'
+                
         bound_field = None
         try:
             bound_field = getattr(obj, rule.field_name)
         except AttributeError:
+            if obj is None:
+                return False
             raise NonexistentFieldName("Field_name %s from rule %s does not longer exist in model %s. \
                                         The rule is obsolete!", (rule.field_name, rule.codename, rule.content_type.model))
 
