@@ -33,7 +33,7 @@ class ObjectPermissionBackend(object):
             user_obj = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
 
         # Centralized authorizations
-        # You need to define a module in settings.CENTRAL_AUTHORIZATIONS that has a 
+        # You need to define a module in settings.CENTRAL_AUTHORIZATIONS that has a
         # central_authorizations function inside
         if hasattr(settings, 'CENTRAL_AUTHORIZATIONS'):
             module = getattr(settings, 'CENTRAL_AUTHORIZATIONS')
@@ -47,10 +47,10 @@ class ObjectPermissionBackend(object):
                 central_authorizations = getattr(mod, 'central_authorizations')
             except AttributeError:
                 raise RulesError('Error module %s does not have a central_authorization function"' % (module))
-            
+
             try:
                 is_authorized = central_authorizations(user_obj, perm)
-                # If the value returned is a boolean we pass it up and stop checking 
+                # If the value returned is a boolean we pass it up and stop checking
                 # If not, we continue checking
                 if isinstance(is_authorized, bool):
                     return is_authorized
@@ -58,37 +58,37 @@ class ObjectPermissionBackend(object):
             except TypeError:
                 raise RulesError('central_authorizations should receive 2 parameters: (user_obj, perm)')
 
-		# Note:
-		# is_active and is_superuser are checked by default in django.contrib.auth.models
-		# lines from 301-306 in Django 1.2.3
-		# If this checks dissapear in mainstream, tests will fail, so we won't double check them :)
-		if not obj:
-			ctype = None
-	        try:
-	            rule = RulePermission.objects.get(codename = perm) #Only a single instance allowed here
-	        except RulePermission.DoesNotExist, RulePermission.MultipleObjectsReturned:
-	            return False
-		else:
-			ctype = ContentType.objects.get_for_model(obj)
+                # Note:
+                # is_active and is_superuser are checked by default in django.contrib.auth.models
+                # lines from 301-306 in Django 1.2.3
+                # If this checks dissapear in mainstream, tests will fail, so we won't double check them :)
+                if not obj:
+                        ctype = None
+                try:
+                    rule = RulePermission.objects.get(codename = perm) #Only a single instance allowed here
+                except RulePermission.DoesNotExist, RulePermission.MultipleObjectsReturned:
+                    return False
+                else:
+                        ctype = ContentType.objects.get_for_model(obj)
 
-	        # We get the rule data and return the value of that rule
-	        try:
-	            rule = RulePermission.objects.get(codename = perm, content_type = ctype)
-	        except RulePermission.DoesNotExist:
-	            return False
+                # We get the rule data and return the value of that rule
+                try:
+                    rule = RulePermission.objects.get(codename = perm, content_type = ctype)
+                except RulePermission.DoesNotExist:
+                    return False
 
-		if not obj:
-			rule.field_name = rule.field_name + "_any"
+                if not obj:
+                        rule.field_name = rule.field_name + "_any"
         bound_field = None
         try:
-        	if obj is None:
-        		klass = rule.content_type.model
-        		bound_field = getattr(klass, rule.field_name)
-        	else:
-            	bound_field = getattr(obj, rule.field_name)
+                if obj is None:
+                        klass = rule.content_type.model
+                        bound_field = getattr(klass, rule.field_name)
+                else:
+                bound_field = getattr(obj, rule.field_name)
         except AttributeError:
-        	if obj is None:
-        		return False #backcompat
+                if obj is None:
+                        return False #backcompat
             raise NonexistentFieldName("Field_name %s from rule %s does not longer exist in model %s. \
                                         The rule is obsolete!", (rule.field_name, rule.codename, rule.content_type.model))
 
