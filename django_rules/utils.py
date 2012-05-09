@@ -20,9 +20,9 @@ def register(app_name, codename, model, field_name='', view_param_pk='', descrip
 
     try:
         # We see if the rule's pk exists, if it does then delete and overwrite it
-        rule = RulePermission.objects.get(pk = codename)
+        rule = RulePermission.objects.get(codename=codename, content_type=ctype)
         rule.delete()
-        sys.stderr.write('Careful rule %s being overwritten. Make sure its codename is not repeated in other rules.py files\n' % codename)
+        sys.stderr.write('Careful rule %s for %s being overwritten. Make sure its codename is not repeated in other rules.py files\n' % (codename, ctype))
         RulePermission.objects.create(codename=codename, field_name=field_name, content_type=ctype,
                     view_param_pk=view_param_pk, description=description)
 
