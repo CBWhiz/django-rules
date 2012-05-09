@@ -12,7 +12,7 @@ class RulePermission(models.Model):
     """
     This model holds the rules for the authorization system
     """
-    codename = models.CharField(primary_key=True, max_length=30)
+    codename = models.CharField(max_length=30)
     field_name = models.CharField(max_length=30)
     content_type = models.ForeignKey(ContentType)
     view_param_pk = models.CharField(max_length=30)
