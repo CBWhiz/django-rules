@@ -17,7 +17,8 @@ class RulePermission(models.Model):
     content_type = models.ForeignKey(ContentType)
     view_param_pk = models.CharField(max_length=30)
     description = models.CharField(max_length=140, null=True)
-
+    class Meta:
+        unique_together = ('codename', 'content_type')
 
     def save(self, *args, **kwargs):
         """
