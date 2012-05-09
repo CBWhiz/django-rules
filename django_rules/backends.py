@@ -58,27 +58,37 @@ class ObjectPermissionBackend(object):
             except TypeError:
                 raise RulesError('central_authorizations should receive 2 parameters: (user_obj, perm)')
 
-        # Note:
-        # is_active and is_superuser are checked by default in django.contrib.auth.models
-        # lines from 301-306 in Django 1.2.3
-	# If this checks dissapear in mainstream, tests will fail, so we won't double check them :)
-        ctype = ContentType.objects.get_for_model(obj)
+		# Note:
+		# is_active and is_superuser are checked by default in django.contrib.auth.models
+		# lines from 301-306 in Django 1.2.3
+		# If this checks dissapear in mainstream, tests will fail, so we won't double check them :)
+		if not obj:
+			ctype = None
+	        try:
+	            rule = RulePermission.objects.get(codename = perm) #Only a single instance allowed here
+	        except RulePermission.DoesNotExist, RulePermission.MultipleObjectsReturned:
+	            return False
+		else:
+			ctype = ContentType.objects.get_for_model(obj)
 
-        # We get the rule data and return the value of that rule
-        try:
-            rule = RulePermission.objects.get(codename = perm, content_type = ctype)
-        except RulePermission.DoesNotExist:
-            return False
-       	    
-       	if obj is None:
-            rule.field_name = rule.field_name + '_any'
-                
+	        # We get the rule data and return the value of that rule
+	        try:
+	            rule = RulePermission.objects.get(codename = perm, content_type = ctype)
+	        except RulePermission.DoesNotExist:
+	            return False
+
+		if not obj:
+			rule.field_name = rule.field_name + "_any"
         bound_field = None
         try:
-            bound_field = getattr(obj, rule.field_name)
+        	if obj is None:
+        		klass = rule.content_type.model
+        		bound_field = getattr(klass, rule.field_name)
+        	else:
+            	bound_field = getattr(obj, rule.field_name)
         except AttributeError:
-            if obj is None:
-                return False
+        	if obj is None:
+        		return False #backcompat
             raise NonexistentFieldName("Field_name %s from rule %s does not longer exist in model %s. \
                                         The rule is obsolete!", (rule.field_name, rule.codename, rule.content_type.model))
 
